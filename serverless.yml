@@ -1,0 +1,66 @@
+service: serverless-playground-service
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  memorySize: 256
+  lambdaHashingVersion: 20201221
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    TRANSACTIONS_TABLE_NAME: ${self:custom.TransactionsDynamoDb.name}
+    TRANSACTIONS_TABLE_ARN: ${self:custom.TransactionsDynamoDb.arn}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+      Resource: ${self:custom.TransactionsDynamoDb.arn}
+
+plugins:
+  - serverless-bundle
+
+resources:
+  - ${file(./resources/dynamoDb/transactions.yml)}
+
+functions:
+  hello:
+    handler: src/handlers/hello.handler
+    events:
+      - http:
+          method: GET
+          path: /hello
+
+  getTransactions:
+    handler: src/handlers/getTransactions.handler
+    events:
+      - http:
+          method: GET
+          path: /transactions
+          cors: true
+
+  createTransaction:
+    handler: src/handlers/createTransaction.handler
+    events:
+      - http:
+          method: POST
+          path: /transaction
+          cors: true
+
+  updateTransaction:
+    handler: src/handlers/updateTransaction.handler
+    events:
+      - http:
+          method: PATCH
+          path: /transaction
+          cors: true
+
+custom:
+  TransactionsDynamoDb:
+    name: !Ref TransactionsDynamoDb
+    arn: !GetAtt TransactionsDynamoDb.Arn
