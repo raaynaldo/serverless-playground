@@ -52,6 +52,14 @@ functions:
           path: /transaction
           cors: true
 
+  updateTransactionWithOL:
+    handler: src/handlers/updateTransactionOptimisticLocking.handler
+    events:
+      - http:
+          method: PATCH
+          path: /transaction-optimistic-locking
+          cors: true
+
   updateTransaction:
     handler: src/handlers/updateTransaction.handler
     events:

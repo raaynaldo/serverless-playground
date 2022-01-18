@@ -2,7 +2,7 @@ import AWS from 'aws-sdk';
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
-async function updateTransaction(event) {
+async function updateTransactionOptimisticLocking(event) {
   const TransactionsTable = process.env.TRANSACTIONS_TABLE_NAME;
 
   const body = JSON.parse(event.body);
@@ -22,9 +22,12 @@ async function updateTransaction(event) {
         ...getParams,
         UpdateExpression:
           'set textMessage = :textMessage, version = :newVersion',
+        ConditionExpression:
+          'attribute_not_exists(version) OR version = :version',
         ExpressionAttributeValues: {
           ':textMessage': [...currentTextMessage, textMessage],
           ':newVersion': version + 1,
+          ':version': version,
         },
       };
 
@@ -56,4 +59,4 @@ async function updateTransaction(event) {
   };
 }
 
-export const handler = updateTransaction;
+export const handler = updateTransactionOptimisticLocking;
